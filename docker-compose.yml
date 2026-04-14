@@ -1,4 +1,18 @@
 services:
+  ewm-service:
+    build:
+      context: .
+      dockerfile: ewm-main-service/Dockerfile
+    container_name: ewm-service
+    ports:
+      - "9090:9090"
+    environment:
+      SERVER_PORT: 9090
+      STATS_SERVER_URL: http://stats-server:8080
+    depends_on:
+      stats-server:
+        condition: service_started
+
   stats-server:
     build:
       context: .
