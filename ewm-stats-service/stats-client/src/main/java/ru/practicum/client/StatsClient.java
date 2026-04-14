@@ -62,7 +62,9 @@ public class StatsClient {
                 .queryParam("unique", unique);
 
         if (uris != null && !uris.isEmpty()) {
-            builder.queryParam("uris", uris.toArray());
+            for (String uri : uris) {
+                builder.queryParam("uris", uri);  // Добавляет несколько раз: ?uris=...&uris=...
+            }
         }
 
         ViewStatsDto[] response = restTemplate.getForObject(builder.build(false).toUri(), ViewStatsDto[].class);
