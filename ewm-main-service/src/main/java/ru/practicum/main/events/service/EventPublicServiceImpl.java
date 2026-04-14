@@ -88,6 +88,7 @@ public class EventPublicServiceImpl implements EventPublicService {
     }
 
     @Override
+    @Transactional
     public EventFullDto getPublicEventById(Long eventId, HttpServletRequest httpRequest) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
@@ -101,18 +102,26 @@ public class EventPublicServiceImpl implements EventPublicService {
         long views = 0L;
         try {
             List<ViewStatsDto> stats = statsClient.getStats(
-                    event.getPublishedOn(),
+                    getStatsStart(event),
                     LocalDateTime.now().plusDays(3),
                     List.of("/events/" + eventId),
                     true);
-            views = stats.isEmpty() ? 0L : stats.getFirst().getHits();
+            views = stats.isEmpty() ? event.getViews() : stats.getFirst().getHits();
+            event.setViews(views);
+            eventRepository.save(event);
         } catch (Exception e) {
             log.warn("Failed to fetch view stats for event id={}: {}", eventId, e.getMessage(), e);
+            views = event.getViews();
         }
 
         EventFullDto dto = EventMapper.toEventFullDto(event);
         dto.setViews(views);
         return dto;
+    }
+
+    private LocalDateTime getStatsStart(Event event) {
+        LocalDateTime start = event.getPublishedOn() != null ? event.getPublishedOn() : event.getCreatedOn();
+        return start.minusSeconds(1);
     }
 
     private void saveHit(HttpServletRequest request) {
@@ -137,7 +146,7 @@ public class EventPublicServiceImpl implements EventPublicService {
                     .map(e -> "/events/" + e.getId())
                     .toList();
             List<ViewStatsDto> stats = statsClient.getStats(
-                    LocalDateTime.now().minusMonths(2),
+                    getStatsStart(events),
                     LocalDateTime.now().plusMonths(2),
                     uris,
                     true
@@ -151,5 +160,12 @@ public class EventPublicServiceImpl implements EventPublicService {
             log.warn("Failed to fetch view stats for {} uris: {}", events.size(), e.getMessage(), e);
             return Map.of();
         }
+    }
+
+    private LocalDateTime getStatsStart(List<Event> events) {
+        return events.stream()
+                .map(this::getStatsStart)
+                .min(LocalDateTime::compareTo)
+                .orElse(LocalDateTime.now().minusYears(1));
     }
 }
