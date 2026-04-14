@@ -141,10 +141,26 @@ public class EventPublicServiceImpl implements EventPublicService {
 
     private String getClientIp(HttpServletRequest request) {
         String forwardedFor = request.getHeader("X-Forwarded-For");
-        if (forwardedFor == null || forwardedFor.isBlank()) {
-            return request.getRemoteAddr();
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
         }
-        return forwardedFor.split(",")[0].trim();
+
+        String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && !realIp.isBlank()) {
+            return realIp.trim();
+        }
+
+        String forwarded = request.getHeader("Forwarded");
+        if (forwarded != null && !forwarded.isBlank()) {
+            for (String part : forwarded.split(";")) {
+                String trimmed = part.trim();
+                if (trimmed.toLowerCase().startsWith("for=")) {
+                    return trimmed.substring(4).replace("\"", "");
+                }
+            }
+        }
+
+        return request.getRemoteAddr();
     }
 
     private Map<Long, Long> getViewsMap(List<Event> events) {

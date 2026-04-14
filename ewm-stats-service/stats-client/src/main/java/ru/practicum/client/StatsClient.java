@@ -67,7 +67,7 @@ public class StatsClient {
             }
         }
 
-        ViewStatsDto[] response = restTemplate.getForObject(builder.build(false).toUri(), ViewStatsDto[].class);
+        ViewStatsDto[] response = restTemplate.getForObject(builder.encode().build().toUri(), ViewStatsDto[].class);
         return response != null ? Arrays.asList(response) : List.of();
     }
 }
