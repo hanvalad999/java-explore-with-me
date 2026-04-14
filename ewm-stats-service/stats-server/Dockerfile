@@ -12,7 +12,7 @@ COPY ewm-stats-service/stats-dto/src ewm-stats-service/stats-dto/src
 COPY ewm-stats-service/stats-client/src ewm-stats-service/stats-client/src
 COPY ewm-stats-service/stats-server/src ewm-stats-service/stats-server/src
 
-RUN mvn -pl ewm-stats-service/stats-server -am clean package -DskipTests
+RUN mvn -pl ewm-stats-service/stats-server -am clean package -Dmaven.test.skip=true
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
