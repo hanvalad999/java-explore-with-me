@@ -142,10 +142,6 @@ public class EventPrivateServiceImpl implements EventPrivateService {
                                                               EventRequestStatusUpdateRequest request) {
         Event event = getOwnedEvent(userId, eventId);
 
-        if (isAutoConfirmationDisabled(event)) {
-            return emptyResult();
-        }
-
         List<Request> requests = requestRepository.findAllByIdInAndEventId(request.getRequestIds(), event.getId());
 
         if (requests.size() != request.getRequestIds().size()) {
@@ -167,14 +163,6 @@ public class EventPrivateServiceImpl implements EventPrivateService {
                         new NotFoundException(String.format("Event with id: %s was not found", eventId)));
     }
 
-    private boolean isAutoConfirmationDisabled(Event event) {
-        return event.getParticipantLimit() == 0 || !event.getRequestModeration();
-    }
-
-    private EventRequestStatusUpdateResult emptyResult() {
-        return new EventRequestStatusUpdateResult(List.of(), List.of());
-    }
-
     private void validateRequests(List<Request> requests) {
         for (Request pr : requests) {
             if (pr.getStatus() != StatusRequest.PENDING) {
@@ -187,7 +175,7 @@ public class EventPrivateServiceImpl implements EventPrivateService {
         int confirmedCount = event.getConfirmedRequests();
         int limit = event.getParticipantLimit();
 
-        if (confirmedCount >= limit) {
+        if (limit > 0 && confirmedCount >= limit) {
             throw new ConflictException("The participant limit has been reached");
         }
 
@@ -195,8 +183,10 @@ public class EventPrivateServiceImpl implements EventPrivateService {
         List<Request> rejected = new ArrayList<>();
 
         for (Request pr : requests) {
-            if (confirmedCount >= limit) {
-                throw new ConflictException("The participant limit has been reached");
+            if (limit > 0 && confirmedCount >= limit) {
+                pr.setStatus(StatusRequest.REJECTED);
+                rejected.add(pr);
+                continue;
             }
             pr.setStatus(StatusRequest.CONFIRMED);
             confirmed.add(pr);
@@ -206,6 +196,9 @@ public class EventPrivateServiceImpl implements EventPrivateService {
         event.setConfirmedRequests(confirmedCount);
 
         rejectRemainingIfLimitReached(event, rejected);
+        requestRepository.saveAll(confirmed);
+        requestRepository.saveAll(rejected);
+        eventRepository.save(event);
 
         return buildResult(confirmed, rejected);
     }

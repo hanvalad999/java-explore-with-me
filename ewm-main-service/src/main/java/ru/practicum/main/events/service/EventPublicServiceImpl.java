@@ -3,7 +3,6 @@ package ru.practicum.main.events.service;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -12,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.StatsClient;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
+import ru.practicum.main.common.OffsetPageRequest;
 import ru.practicum.main.error.BadRequestException;
 import ru.practicum.main.error.NotFoundException;
 import ru.practicum.main.events.dto.EventFullDto;
@@ -41,11 +41,9 @@ public class EventPublicServiceImpl implements EventPublicService {
     public List<EventShortDto> getPublicEvents(String text, List<Long> categories, Boolean paid,
                                                LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable,
                                                EventSort sort, int from, int size, HttpServletRequest httpRequest) {
-        int page = from / size;
-
         Pageable pageable = (sort == EventSort.EVENT_DATE)
-                ? PageRequest.of(page, size, Sort.by("eventDate").ascending())
-                : PageRequest.of(page, size);
+                ? new OffsetPageRequest(from, size, Sort.by("eventDate").ascending())
+                : new OffsetPageRequest(from, size);
 
         if (rangeStart != null && rangeEnd != null && rangeEnd.isBefore(rangeStart)) {
             throw new BadRequestException("rangeEnd must not be before rangeStart");
@@ -62,7 +60,9 @@ public class EventPublicServiceImpl implements EventPublicService {
                 .and(EventSpecification.eventDateBefore(rangeEnd))
                 .and(EventSpecification.isAvailable(onlyAvailable));
 
-        List<Event> events = eventRepository.findAll(spec, pageable).getContent();
+        List<Event> events = sort == EventSort.VIEWS
+                ? eventRepository.findAll(spec)
+                : eventRepository.findAll(spec, pageable).getContent();
 
         saveHit(httpRequest);
 
@@ -71,13 +71,17 @@ public class EventPublicServiceImpl implements EventPublicService {
         List<EventShortDto> result = events.stream()
                 .map(e -> {
                     EventShortDto dto = EventMapper.toEventShortDto(e);
-                    dto.setViews(viewsMap.getOrDefault(e.getId(), 0L));
+                    dto.setViews(viewsMap.getOrDefault(e.getId(), e.getViews()));
                     return dto;
                 })
                 .collect(Collectors.toList());
 
         if (sort == EventSort.VIEWS) {
             result.sort(Comparator.comparingLong(EventShortDto::getViews).reversed());
+            return result.stream()
+                    .skip(from)
+                    .limit(size)
+                    .toList();
         }
 
         return result;

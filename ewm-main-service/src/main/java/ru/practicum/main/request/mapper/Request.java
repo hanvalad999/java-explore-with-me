@@ -8,7 +8,7 @@ import ru.practicum.main.user.model.User;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "userRequests")
+@Table(name = "participation_requests")
 @Getter
 @Setter
 @NoArgsConstructor
