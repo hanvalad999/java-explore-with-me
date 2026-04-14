@@ -130,13 +130,21 @@ public class EventPublicServiceImpl implements EventPublicService {
                     null,
                     "ewm-main-service",
                     request.getRequestURI(),
-                    request.getRemoteAddr(),
+                    getClientIp(request),
                     LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
             ));
         } catch (Exception e) {
-            log.warn("Failed to save hit for uri={} ip={}: {}", request.getRequestURI(), request.getRemoteAddr(),
+            log.warn("Failed to save hit for uri={} ip={}: {}", request.getRequestURI(), getClientIp(request),
                     e.getMessage(), e);
         }
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (forwardedFor == null || forwardedFor.isBlank()) {
+            return request.getRemoteAddr();
+        }
+        return forwardedFor.split(",")[0].trim();
     }
 
     private Map<Long, Long> getViewsMap(List<Event> events) {
