@@ -10,7 +10,11 @@
     </parent>
 
     <artifactId>ewm-main-service</artifactId>
-    
+
+    <properties>
+        <lombok.version>1.18.34</lombok.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
