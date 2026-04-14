@@ -17,5 +17,5 @@ RUN mvn -pl ewm-stats-service/stats-server -am clean package -Dmaven.test.skip=t
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /workspace/ewm-stats-service/stats-server/target/stats-server.jar app.jar
-EXPOSE 9090
+EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
