@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,8 +33,10 @@ public class StatsController {
     @GetMapping("/stats")
     public List<ViewStatsDto> getStats(
             @RequestParam
+            @DateTimeFormat(pattern = DATE_TIME_PATTERN)
             LocalDateTime start,
             @RequestParam
+            @DateTimeFormat(pattern = DATE_TIME_PATTERN)
             LocalDateTime end,
             @RequestParam(required = false) List<String> uris,
             @RequestParam(defaultValue = "false") boolean unique
