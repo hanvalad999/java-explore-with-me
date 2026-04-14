@@ -5,12 +5,12 @@ services:
       dockerfile: ewm-stats-service/stats-server/Dockerfile
     container_name: ewm-stats-server
     ports:
-      - "9090:9090"
+      - "8080:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats
       SPRING_DATASOURCE_USERNAME: stats
       SPRING_DATASOURCE_PASSWORD: stats
-      SERVER_PORT: 9090
+      SERVER_PORT: 8080
     depends_on:
       stats-db:
         condition: service_healthy
