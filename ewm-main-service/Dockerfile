@@ -6,6 +6,7 @@ COPY ewm-main-service/pom.xml ewm-main-service/pom.xml
 COPY ewm-stats-service/pom.xml ewm-stats-service/pom.xml
 COPY ewm-stats-service/stats-dto/pom.xml ewm-stats-service/stats-dto/pom.xml
 COPY ewm-stats-service/stats-client/pom.xml ewm-stats-service/stats-client/pom.xml
+COPY ewm-stats-service/stats-server/pom.xml ewm-stats-service/stats-server/pom.xml
 
 COPY ewm-main-service/src ewm-main-service/src
 COPY ewm-stats-service/stats-dto/src ewm-stats-service/stats-dto/src

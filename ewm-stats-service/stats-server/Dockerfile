@@ -2,6 +2,7 @@ FROM maven:3.9.8-eclipse-temurin-21 AS build
 WORKDIR /workspace
 
 COPY pom.xml pom.xml
+COPY ewm-main-service/pom.xml ewm-main-service/pom.xml
 COPY ewm-stats-service/pom.xml ewm-stats-service/pom.xml
 COPY ewm-stats-service/stats-dto/pom.xml ewm-stats-service/stats-dto/pom.xml
 COPY ewm-stats-service/stats-client/pom.xml ewm-stats-service/stats-client/pom.xml
