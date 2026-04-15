@@ -1,8 +1,8 @@
 package ru.practicum.server.controller;
 
 import jakarta.validation.Valid;
-import java.time.LocalDateTime;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,30 +14,27 @@ import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.server.service.StatsService;
 
-@RestController
-public class StatsController {
-    private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
-    private final StatsService statsService;
+import java.time.LocalDateTime;
+import java.util.List;
 
-    public StatsController(StatsService statsService) {
-        this.statsService = statsService;
-    }
+@RestController
+@RequiredArgsConstructor
+public class StatsController {
+
+    private final StatsService statsService;
 
     @PostMapping("/hit")
     @ResponseStatus(HttpStatus.CREATED)
-    public void createHit(@Valid @RequestBody EndpointHitDto endpointHitDto) {
-        statsService.saveHit(endpointHitDto);
+    public void hit(@Valid @RequestBody EndpointHitDto hitDto) {
+        statsService.saveHit(hitDto);
     }
 
     @GetMapping("/stats")
     public List<ViewStatsDto> getStats(
-            @RequestParam
-            LocalDateTime start,
-            @RequestParam
-            LocalDateTime end,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
             @RequestParam(required = false) List<String> uris,
-            @RequestParam(defaultValue = "false") boolean unique
-    ) {
+            @RequestParam(defaultValue = "false") boolean unique) {
         return statsService.getStats(start, end, uris, unique);
     }
 }
