@@ -8,6 +8,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -73,7 +74,7 @@ public class StatsClient {
             }
         }
 
-        String url = builder.encode().build().toUriString();
+        URI url = builder.build(false).toUri();
         log.info("Requesting stats: start={}, end={}, urisCount={}, unique={}",
                 start.format(FORMATTER), end.format(FORMATTER), uris == null ? 0 : uris.size(), unique);
         log.debug("Stats getStats requestUrl={}", url);
