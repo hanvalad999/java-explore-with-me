@@ -1,5 +1,6 @@
 package ru.practicum.client;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
@@ -12,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
+@Slf4j
 public class StatsClient {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -51,7 +53,11 @@ public class StatsClient {
     }
 
     public ResponseEntity<Object> saveHit(EndpointHitDto hitDto) {
-        return restTemplate.postForEntity(serverUrl + "/hit", hitDto, Object.class);
+        log.info("Sending hit to stats service: app={}, uri={}, ip={}", hitDto.getApp(), hitDto.getUri(), hitDto.getIp());
+        log.debug("Stats saveHit request={}", toJson(hitDto));
+        ResponseEntity<Object> response = restTemplate.postForEntity(serverUrl + "/hit", hitDto, Object.class);
+        log.debug("Stats saveHit responseStatus={}, responseBody={}", response.getStatusCode(), response.getBody());
+        return response;
     }
 
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end,
@@ -67,7 +73,27 @@ public class StatsClient {
             }
         }
 
-        ViewStatsDto[] response = restTemplate.getForObject(builder.encode().build().toUri(), ViewStatsDto[].class);
-        return response != null ? Arrays.asList(response) : List.of();
+        String url = builder.encode().build().toUriString();
+        log.info("Requesting stats: start={}, end={}, urisCount={}, unique={}",
+                start.format(FORMATTER), end.format(FORMATTER), uris == null ? 0 : uris.size(), unique);
+        log.debug("Stats getStats requestUrl={}", url);
+        ViewStatsDto[] response = restTemplate.getForObject(url, ViewStatsDto[].class);
+        List<ViewStatsDto> result = response != null ? Arrays.asList(response) : List.of();
+        log.debug("Stats getStats response={}", result.stream().map(this::toJson).toList());
+        return result;
+    }
+
+    private String toJson(EndpointHitDto hitDto) {
+        return String.format(
+                "{\"id\":%s,\"app\":\"%s\",\"uri\":\"%s\",\"ip\":\"%s\",\"timestamp\":\"%s\"}",
+                hitDto.getId(), hitDto.getApp(), hitDto.getUri(), hitDto.getIp(), hitDto.getTimestamp()
+        );
+    }
+
+    private String toJson(ViewStatsDto statsDto) {
+        return String.format(
+                "{\"app\":\"%s\",\"uri\":\"%s\",\"hits\":%s}",
+                statsDto.getApp(), statsDto.getUri(), statsDto.getHits()
+        );
     }
 }
