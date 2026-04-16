@@ -1,2 +1,3 @@
 # java-explore-with-me
-Template repository for ExploreWithMe project.
+
+https://github.com/hanvalad999/java-explore-with-me/compare/main...feature
