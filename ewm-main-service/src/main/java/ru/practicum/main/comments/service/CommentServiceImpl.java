@@ -168,7 +168,7 @@ public class CommentServiceImpl implements CommentService {
 
         return CommentMapper.toCommentDto(
                 comment,
-                UserMapper.toUserShortDto(author),
+                UserMapper.toUserShortDto(comment.getAuthor()),
                 EventMapper.toEventShortDto(comment.getEvent()),
                 likesCount
         );
